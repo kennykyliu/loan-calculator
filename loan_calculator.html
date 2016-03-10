@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link href="css/bootstrap.min.css" rel="stylesheet" media="screen">
+    <script src="http://code.jquery.com/jquery.js"></script>
+    <script src="js/bootstrap.min.js"></script>
+    <style>
+        body {
+            padding-top: 60px;
+        }
+        #graph {
+            border: solid black 1px;
+        }
+    </style>
+    <title>Loan Calculator</title>
+    <script type="text/javascript">
+        function checkLoan(inCal) {
+            var amount = document.getElementById("txtloan");
+            var result = document.getElementById("loanCheck");
+            var loanAlert = document.getElementById("loanAlert");
+            var loan_num = parseFloat(amount.value);
+            if (isNaN(loan_num) && inCal) {
+                result.innerHTML = "Please fill data";
+                loanAlert.style.display = 'inline-block';
+                window.isLoadReady = false;
+                return;
+            } else if (loan_num > 1000000 || loan_num < 100) {
+                result.innerHTML = "Amount should >= 100 and <= 1000000";
+                loanAlert.style.display = 'inline-block';
+                window.isLoadReady = false;
+                return;
+            } else {
+                loanAlert.style.display = 'none';
+                result.innerHTML = "";
+            }
+            window.isLoadReady = true;
+        }
+
+        function checkInterest(inCal) {
+            var interest = document.getElementById("annualint");
+            var result = document.getElementById("interestCheck");
+            var interestAlert = document.getElementById("interestAlert");
+            var interest_num = parseFloat(interest.value);
+
+            if (isNaN(interest_num) && inCal) {
+                result.innerHTML = "Please fill data";
+                interestAlert.style.display = 'inline-block';
+                window.isInterestReady = false;
+                return;
+            } else if (interest_num <= 0 || interest_num > 100) {
+                result.innerHTML = "Wrong interest, please enter again";
+                interestAlert.style.display = 'inline-block';
+                window.isInterestReady = false;
+                return;
+            } else {
+                interestAlert.style.display = 'none';
+                result.innerHTML = "";
+            }
+            window.isInterestReady = true;
+        }
+
+        function checkPeriod(inCal) {
+            var period = document.getElementById("payperiod");
+            var result = document.getElementById("periodCheck");
+            var periodAlert = document.getElementById("periodAlert");
+            var period_num = parseFloat(period.value);
+
+            if (isNaN(period_num) && inCal) {
+                result.innerHTML = "Please fill data";
+                periodAlert.style.display = 'inline-block';
+                window.isPeriodReady = false;
+                return;
+            } else if (period_num > 30) {
+                result.innerHTML = "No higher than 30 years";
+                periodAlert.style.display = 'inline-block';
+                window.isPeriodReady = false;
+                return;
+            } else if (period_num <= 0) {
+                result.innerHTML = "Period should be > 0";
+                periodAlert.style.display = 'inline-block';
+                window.isPeriodReady = false;
+                return;
+            } else {
+                periodAlert.style.display = 'none';
+                result.innerHTML = "";
+            }
+            window.isPeriodReady = true;
+        }
+
+        function calculate() {
+            checkLoan(true);
+            checkInterest(true);
+            checkPeriod(true);
+            var result = document.getElementById("dataCheck");
+            var calAlert = document.getElementById("calAlert");
+            // Get values of user input from document
+            var amount = document.getElementById("txtloan");
+            var interest = document.getElementById("annualint");
+            var payperiod = document.getElementById("payperiod");
+            var zipcode = document.getElementById("zipcode");
+            // Get fields for appending data from document
+            var monpay = document.getElementById("monpay");
+            var totalpay = document.getElementById("totalpay");
+            var totalint = document.getElementById("totalint");
+
+            // Get data
+            var loan_num = parseFloat(amount.value);
+            var interest_num = parseFloat(interest.value) / 12 / 100;
+            var payment_period = parseFloat(payperiod.value) * 12;
+
+            // Calculate monthly payment
+            var base = Math.pow(interest_num + 1, payment_period);
+            var monthly = (loan_num * base * interest_num) / (base - 1);
+            if (!window.isLoadReady || !window.isInterestReady || !window.isPeriodReady || !isFinite(monthly)) {
+                result.innerHTML = "Please correct data before calculation.";
+                calAlert.style.display = 'inline-block';
+                monpay.innerHTML = "";
+                totalpay.innerHTML = "";
+                totalint.innerHTML = "";
+                return;
+            } else {
+                calAlert.style.display = 'none';
+                result.innerHTML = "";
+                monpay.innerHTML = "$" + monthly.toFixed(2);
+                totalpay.innerHTML = "$" + (monthly * payment_period).toFixed(2);
+                totalint.innerHTML = "$" + ((monthly * payment_period) - loan_num).toFixed(2);
+            }
+        }
+
+
+
+    </script>
+</head>
+<body>
+    <div class="navbar navbar-inverse navbar-fixed-top">
+        <div class="navbar-inner">
+            <div class="container">
+                <button type="button" class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+                <a class="brand" href="#">Loan Calculator</a>
+                <div class="nav-collapse collapse">
+                    <ul class="nav">
+                        <li class="active"><a href="#">Home</a></li>
+                        <li><a href="#about">About</a></li>
+                        <li><a href="#contact">Contact</a></li>
+                    </ul>
+                </div><!--/.nav-collapse -->
+            </div>
+        </div>
+    </div>
+    <div class="container">
+        <table>
+            <tr>
+                <th>Enter Loan Data:</th>
+                <td></td>
+                <th>Loan Balance, Cumulative Equity, and Interest Payments</th>
+            </tr>
+            <tr>
+                <td>Amount of the loan ($):</td>
+                <td><input type="number" id="txtloan" name="loan" value="" onblur="checkLoan()"></td>
+                <td rowspan=8><canvas id="graph" width="400" height="250"></canvas></td>
+            </tr>
+            <tr>
+                <td></td>
+                <td><div class="alert alert-error" id="loanAlert" style="display:none">
+                    <strong id="loanCheck"></strong>
+                </div></td>
+            </tr>
+            <tr>
+                <td>Annual interest (%):</td>
+                <td><input type="number" id="annualint" name="interest" value="" onblur="checkInterest()"></td>
+            </tr>
+            <tr>
+                <td></td>
+                <td><div class="alert alert-error" id="interestAlert" style="display:none">
+                    <strong id="interestCheck"></strong>
+                </div></td>
+            </tr>
+            <tr>
+                <td>Repayment period (year):</td>
+                <td><input type="number" id="payperiod" name="period" value="" onblur="checkPeriod()"></td>
+            </tr>
+            <tr>
+                <td></td>
+                <td><div class="alert alert-error" id="periodAlert" style="display:none">
+                    <strong id="periodCheck"></strong>
+                </div></td>
+            </tr>
+            <tr>
+                <td>Zipcode (to find lenders):</td>
+                <td><input type="number" id="zipcode" name="zipcode" value=""></td>
+            </tr>
+            <tr>
+                <th>Approximate Payments:</th>
+                <td><input type="button" value="Calculate" onclick="calculate()" class="btn btn-primary"></td>
+            </tr>
+            <tr>
+                <td></td>
+                <td><div class="alert alert-error" id="calAlert" style="display:none">
+                    <strong id="dataCheck"></strong>
+                </div></td>
+            </tr>
+            <tr>
+                <td>Monthly payment:</td>
+                <td><span id="monpay"></span></td>
+            </tr>
+            <tr>
+                <td>Total payment:</td>
+                <td><span id="totalpay"></span></td>
+            </tr>
+            <tr>
+                <td>Total interest:</td>
+                <td><span id="totalint"></span></td>
+            </tr>
+            <tr>
+                <th>Sponsors:</th>
+                <td colspan=2>Apply for your loan with one of these fine lenders:</td>
+            </tr>
+        </table>
+    </div>
+</body>
+</html>
